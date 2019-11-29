@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+#使用matplotlib库画图
+import matplotlib.pyplot as plot
+from sklearn.neighbors import KNeighborsClassifier
+#引入用于数据预处理/特征工程的工具包
+from sklearn import preprocessing
+#使用均方误差用于评价模型好坏
+from sklearn.metrics import mean_squared_error
+#读取数据
+car_parameters= pd.read_csv('train_price.csv')
+real_price=pd.read_csv('train_price2.csv')  #销售价格
+test_parameters=pd.read_csv('test_price.csv')    #测试数据
+car_parameters.info()    #查看是否有缺失值
+mse=[[0]*8 for _ in range(2)]   #构建列表来存储每次训练的均方误差
+#构建列表，绘图x轴参数
+num_list=[]
+for n in range(500):
+    num_list.append(n)
+def para_selection_KNN(car_parameters,real_price,test_parameters):    
+    #part-2 KNN邻近算法预测
+    knn = KNeighborsClassifier(n_neighbors=3)
+    # 使用算法，进行学习，训练
+    knn.fit(car_parameters,real_price)
+    # 预测已知数据，使用均方评估模型
+    car_predict2=knn.predict(car_parameters)
+    mse2=mean_squared_error(car_predict2,real_price)   
+    #print('KNN均方根误差率：: %.3f' %(mse2))
+    return mse2
+def para_selection_KNN_test(car_parameters,real_price,test_parameters,mse2):    
+    knn = KNeighborsClassifier(n_neighbors=3)
+    # 使用算法，进行学习，训练
+    knn.fit(car_parameters,real_price)
+    car_predict2=knn.predict(car_parameters)
+    # #绘制图
+    plot.figure(figsize=(20,10))
+    plot.plot(real_price.values[:,0], color ='red', label = 'real price')
+    plot.plot(car_predict2, color = 'green', label = 'predict price')
+    plot.title('KNN Price Prediction VS real price')
+    plot.xlabel('ID')
+    plot.ylabel('Car Price')
+    plot.legend(loc="upper right")
+    plot.show()
+    #预测目标数据     
+    test_predict2=knn.predict(test_parameters)
+    df_result2=pd.DataFrame(test_predict2)
+    df_result2.to_csv("result_KNN.csv")
+    # 绘制柱状图
+    plot.figure()
+    x1=len(test_predict2)
+    plot.bar(num_list, test_predict2, width=0.5, color="green")
+    plot.xlabel('ID')    # 设置横轴标签
+    plot.ylabel('car price')    # 设置纵轴标签
+    plot.title('KNN price prediction')    # 添加标题
+    plot.show()
+    print('KNN均方根误差率：: %.3f' %(mse2))
+#选取训练子集
+num1=0
+num2=800
+length=8 #循环训练次数
+gap=100 #循环间隔
+for col in range(length):
+    mse[1][col]=para_selection_KNN(car_parameters[(num1+col*gap):(num2+col*gap)],real_price[(num1+col*gap):(num2+col*gap)],test_parameters)
+#查询最小均方误差的训练集
+min_KNN=min(mse[1][:])
+for l2 in range(length):
+    if min_KNN==mse[1][l2]:location2=l2
+    else:continue
+#利用KNN的最佳训练结果分别预测价格
+para_selection_KNN_test(car_parameters[num1+location2*gap:num2+location2*gap],real_price[num1+location2*gap:num2+location2*gap],test_parameters,mse[1][location2])
