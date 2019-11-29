@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+#使用matplotlib库画图
+import matplotlib.pyplot as plot
+from sklearn.neighbors import KNeighborsClassifier
+#引入用于数据预处理/特征工程的工具包
+from sklearn import preprocessing
+#使用均方误差用于评价模型好坏
+from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import MinMaxScaler
+#读取数据
+car_parameters= pd.read_csv('train_price.csv')
+real_price=pd.read_csv('train_price2.csv')  #销售价格
+test_price=pd.read_csv('test_price.csv')    #测试数据
+#数据预处理
+car_parameters.info()    #查看是否有缺失值
+#part-1 选择基于梯度下降的线性回归模型
+#最值归一化已知汽车价格属性
+minmax_scaler=MinMaxScaler()
+minmax_scaler.fit(car_parameters)   
+scaler_car=minmax_scaler.transform(car_parameters)
+scaler_car=pd.DataFrame(scaler_car,columns=car_parameters.columns)
+#最值归一化预测价格属性
+mm=MinMaxScaler()
+mm.fit(test_price)
+scaler_t=mm.transform(test_price)
+scaler_t=pd.DataFrame(scaler_t,columns=test_price.columns)
+LR_reg=LinearRegression()
+#使用算法，进行学习，训练
+LR_reg.fit(scaler_car,real_price)
+# 预测已知数据，使用均方评估模型
+preds=LR_reg.predict(scaler_car)   #输入数据进行预测得到结果
+preds=np.rint(preds)
+car_predict1=pd.DataFrame(preds)
+car_predict1.to_csv("car_predict_LR.csv")
+mse1=mean_squared_error(preds,real_price) 
+print('线性回归均方误差: %.3f' %(mse1))
+#绘制图
+plot.figure(figsize=(20,9))
+x1=len(car_predict1)
+plot.plot(real_price, color ='red', label = 'real price')
+plot.plot(car_predict1, color = 'green', label = 'predict price')
+plot.title('LinearRegression Price Prediction VS real price')
+plot.xlabel('ID')
+plot.ylabel('Car Price')
+plot.legend(loc="upper right")
+plot.show()
+ #预测目标数据
+test_predict1=LR_reg.predict(scaler_t)
+test_predict1=np.rint(test_predict1)
+df_result1=pd.DataFrame(test_predict1)
+df_result1.to_csv("result_LR.csv")
+y=pd.read_csv("result_LR.csv")
+y=y.values[:,1]
+num_list=[]
+for n in range(500):
+    num_list.append(n)
+plot.figure()
+# 绘制柱状图
+p2= plot.bar(num_list, y, width=0.5, label="", color="green")
+# 设置横轴标签
+plot.xlabel('ID')
+# 设置纵轴标签
+plot.ylabel('car price')
+# 添加标题
+plot.title('LR price prediction')
+# 添加图例
+plot.legend(loc="upper right")
+plot.show()
