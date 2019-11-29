@@ -1,0 +1,59 @@
+import numpy as np
+import pandas as pd
+#使用matplotlib库画图
+import matplotlib
+import matplotlib.pyplot as plot
+from sklearn.neighbors import KNeighborsClassifier
+#引入用于数据预处理/特征工程的工具包
+from sklearn import preprocessing
+#使用均方误差用于评价模型好坏
+from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import MinMaxScaler
+#读取数据
+car_parameters= pd.read_csv('train_price.csv')
+real_price=pd.read_csv('train_price2.csv')  #销售价格
+test_price=pd.read_csv('test_price.csv')    #测试数据
+#数据预处理
+car_parameters.info()    #查看是否有缺失值
+#part-2 KNN邻近算法预测
+# 声明算法
+knn = KNeighborsClassifier(n_neighbors=4)
+# 使用算法，进行学习，训练
+knn.fit(car_parameters,real_price)
+# 预测已知数据，使用均方评估模型
+car_predict2=knn.predict(car_parameters)
+mse2=mean_squared_error(car_predict2,real_price)  
+print('KNN均方误差率：: %.3f' %(mse2))
+num_list=[]
+for n in range(500):
+    num_list.append(n)
+#绘制直方图
+plot.figure(figsize=(20,9))
+x1=len(car_predict2)
+plot.plot(real_price, color ='red', label = 'real price')
+plot.plot(car_predict2, color = 'green', label = 'predict price')
+plot.title('KNN Price Prediction VS real price')
+plot.xlabel('ID')
+plot.ylabel('Car Price')
+plot.legend(loc="upper right")
+plot.show()
+#预测目标数据
+test_parameters=pd.read_csv('test_price.csv')        
+test_predict2=knn.predict(test_parameters)
+df_result2=pd.DataFrame(test_predict2)
+df_result2.to_csv("result_KNN.csv")
+# 绘制柱状图
+plot.figure()
+x1=len( test_predict2)
+plot.bar(num_list, test_predict2, width=0.5, label="", color="green")
+# 设置横轴标签
+plot.xlabel('ID')
+# 设置纵轴标签
+plot.ylabel('car price')
+# 添加标题
+plot.title('KNN price prediction')
+# 添加图例
+plot.legend(loc="upper right")
+plot.show()
+print('KNN均方误差率：: %.3f' %(mse2))
